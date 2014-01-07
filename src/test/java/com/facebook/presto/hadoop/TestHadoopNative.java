@@ -16,7 +16,9 @@ package com.facebook.presto.hadoop;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.NativeCodeLoader;
+import org.apache.hadoop.util.NativeLibraryChecker;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -33,6 +35,15 @@ import static org.testng.Assert.assertTrue;
 
 public class TestHadoopNative
 {
+    @Test
+    public void testNative()
+    {
+        HadoopNative.requireHadoopNative();
+
+        ExitUtil.disableSystemExit();
+        NativeLibraryChecker.main(new String[] {"-a"});
+    }
+
     @Test
     public void testCodecRoundTrip()
             throws Exception
