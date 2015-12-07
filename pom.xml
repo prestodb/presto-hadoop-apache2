@@ -41,8 +41,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.7</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.shaded</shadeBase>
-        <dep.slf4j.version>1.7.5</dep.slf4j.version>
-        <dep.hadoop.version>2.2.0</dep.hadoop.version>
+        <dep.slf4j.version>1.7.13</dep.slf4j.version>
+        <dep.hadoop.version>2.7.1</dep.hadoop.version>
     </properties>
 
     <dependencies>
@@ -72,6 +72,26 @@
                     <artifactId>zookeeper</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-framework</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-recipes</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.directory.server</groupId>
+                    <artifactId>apacheds-kerberos-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-compress</artifactId>
                 </exclusion>
@@ -80,16 +100,16 @@
                     <artifactId>commons-math</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-math3</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>commons-beanutils</groupId>
                     <artifactId>commons-beanutils</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>commons-beanutils</groupId>
                     <artifactId>commons-beanutils-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>commons-digester</groupId>
@@ -176,6 +196,10 @@
                     <artifactId>jsr305</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>net.java.dev.jets3t</groupId>
+                    <artifactId>jets3t</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
@@ -207,6 +231,10 @@
                 <exclusion>
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.fusesource.leveldbjni</groupId>
+                    <artifactId>leveldbjni-all</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.codehaus.jackson</groupId>
@@ -243,6 +271,10 @@
                 <exclusion>
                     <groupId>javax.servlet.jsp</groupId>
                     <artifactId>jsp-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>xmlenc</groupId>
@@ -430,6 +462,18 @@
                             </transformers>
                             <relocations>
                                 <relocation>
+                                    <pattern>org.iq80.leveldb</pattern>
+                                    <shadedPattern>${shadeBase}.org.iq80.leveldb</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.http</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.http</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>io.netty</pattern>
+                                    <shadedPattern>${shadeBase}.io.netty</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.avro</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.avro</shadedPattern>
                                 </relocation>
@@ -446,8 +490,8 @@
                                     <shadedPattern>${shadeBase}.com.google.protobuf</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.jets3t</pattern>
-                                    <shadedPattern>${shadeBase}.org.jets3t</shadedPattern>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>${shadeBase}.com.google.gson</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.log4j</pattern>
@@ -472,6 +516,12 @@
                                     </excludes>
                                 </filter>
                                 <filter>
+                                    <artifact>io.netty:netty-all</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/io.netty.versions.properties</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
                                     <artifact>commons-configuration:commons-configuration</artifact>
                                     <excludes>
                                         <exclude>*.xml</exclude>
@@ -485,9 +535,22 @@
                                     </excludes>
                                 </filter>
                                 <filter>
+                                    <artifact>org.apache.htrace:htrace-core</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/commons-logging/**</exclude>
+                                        <exclude>META-INF/services/com.fasterxml.jackson.*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
                                     <artifact>org.apache.hadoop:hadoop-common</artifact>
                                     <excludes>
                                         <exclude>*.h</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.hadoop:hadoop-mapreduce-client-core</artifact>
+                                    <excludes>
+                                        <exclude>mapred-default.xml.orig</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
