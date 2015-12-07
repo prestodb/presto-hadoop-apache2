@@ -41,7 +41,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.7</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.shaded</shadeBase>
-        <dep.slf4j.version>1.7.5</dep.slf4j.version>
+        <dep.slf4j.version>1.7.10</dep.slf4j.version>
         <dep.hadoop.version>2.7.1</dep.hadoop.version>
     </properties>
 
@@ -429,6 +429,10 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                             <relocations>
+				<relocation>
+				    <pattern>org.iq80.leveldb</pattern>
+				    <shadedPattern>${shadeBase}.org.iq80.leveldb</shadedPattern>
+				</relocation>
 				<relocation>
 				    <pattern>org.apache.http</pattern>
 				    <shadedPattern>${shadeBase}.org.apache.http</shadedPattern>
