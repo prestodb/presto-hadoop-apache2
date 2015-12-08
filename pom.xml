@@ -447,7 +447,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>1.6</version>
+                <version>2.4.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -456,7 +456,9 @@
                         </goals>
                         <configuration>
                             <createSourcesJar>true</createSourcesJar>
-                            <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
+                            <shadeSourcesContent>true</shadeSourcesContent>
+                            <dependencyReducedPomLocation>${project.build.directory}/pom.xml</dependencyReducedPomLocation>
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
