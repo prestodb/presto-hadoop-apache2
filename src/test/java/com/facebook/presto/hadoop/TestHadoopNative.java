@@ -16,9 +16,9 @@ package com.facebook.presto.hadoop;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hadoop.util.ExitUtil;
+import org.apache.hadoop.io.compress.bzip2.Bzip2Factory;
+import org.apache.hadoop.io.compress.zlib.ZlibFactory;
 import org.apache.hadoop.util.NativeCodeLoader;
-import org.apache.hadoop.util.NativeLibraryChecker;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -40,8 +40,10 @@ public class TestHadoopNative
     {
         HadoopNative.requireHadoopNative();
 
-        ExitUtil.disableSystemExit();
-        NativeLibraryChecker.main(new String[] {"-a"});
+        assertTrue(NativeCodeLoader.isNativeCodeLoaded());
+        assertTrue(NativeCodeLoader.buildSupportsSnappy());
+        assertTrue(ZlibFactory.isNativeZlibLoaded(new Configuration()));
+        assertTrue(Bzip2Factory.isNativeBzip2Loaded(new Configuration()));
     }
 
     @Test
@@ -49,8 +51,6 @@ public class TestHadoopNative
             throws Exception
     {
         HadoopNative.requireHadoopNative();
-        assertTrue(NativeCodeLoader.isNativeCodeLoaded());
-        assertTrue(NativeCodeLoader.buildSupportsSnappy());
 
         Configuration conf = new Configuration();
         CompressionCodecFactory factory = new CompressionCodecFactory(conf);
