@@ -370,6 +370,28 @@
             <version>6.2.1</version>
             <scope>test</scope>
         </dependency>
+
+	<dependency>
+	   <groupId>com.amazonaws</groupId>
+	   <artifactId>aws-java-sdk</artifactId>
+	   <version>1.8.9.1</version>
+	   <scope>test</scope>
+	   <exclusions>
+		<exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+		<exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+	        <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>	
+	   </exclusions>
+	</dependency>
+
     </dependencies>
 
     <build>
