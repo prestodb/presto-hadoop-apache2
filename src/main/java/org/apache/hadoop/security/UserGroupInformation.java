@@ -627,8 +627,11 @@ public class UserGroupInformation {
     @InterfaceStability.Evolving
     public synchronized
     static UserGroupInformation getCurrentUser() throws IOException {
-        AccessControlContext context = AccessController.getContext();
-        Subject subject = Subject.getSubject(context);
+        Subject subject = AsSubjectInvoker.getCurrentUser();
+        if (subject == null) {
+            AccessControlContext context = AccessController.getContext();
+            subject = Subject.getSubject(context);
+        }
         if (subject == null || subject.getPrincipals(User.class).isEmpty()) {
             return getLoginUser();
         } else {
@@ -1632,9 +1635,22 @@ public class UserGroupInformation {
      */
     @InterfaceAudience.Public
     @InterfaceStability.Evolving
-    public <T> T doAs(PrivilegedAction<T> action) {
+    public <T> T doAs(final PrivilegedAction<T> action) {
         logPrivilegedAction(subject, action);
-        return Subject.doAs(subject, action);
+        return AsSubjectInvoker.doAs(subject, new SubjectPrivilegedAction<T>() {
+            @Override
+            public T run()
+            {
+                return Subject.doAs(subject, action);
+            }
+        });
+    }
+
+    @InterfaceAudience.Public
+    @InterfaceStability.Evolving
+    public <T> T doAs(SubjectPrivilegedAction<T> action) {
+        logPrivilegedAction(subject, action);
+        return AsSubjectInvoker.doAs(subject, action);
     }
 
     /**
@@ -1650,27 +1666,51 @@ public class UserGroupInformation {
      */
     @InterfaceAudience.Public
     @InterfaceStability.Evolving
-    public <T> T doAs(PrivilegedExceptionAction<T> action
+    public <T> T doAs(final PrivilegedExceptionAction<T> action
     ) throws IOException, InterruptedException {
         try {
             logPrivilegedAction(subject, action);
-            return Subject.doAs(subject, action);
+            return AsSubjectInvoker.doAs(subject, new SubjectPrivilegedExceptionAction<T>() {
+                @Override
+                public T run() throws Exception
+                {
+                    return Subject.doAs(subject, action);
+                }
+            });
         } catch (PrivilegedActionException pae) {
-            Throwable cause = pae.getCause();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("PrivilegedActionException as:" + this + " cause:" + cause);
-            }
-            if (cause instanceof IOException) {
-                throw (IOException) cause;
-            } else if (cause instanceof Error) {
-                throw (Error) cause;
-            } else if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
-            } else if (cause instanceof InterruptedException) {
-                throw (InterruptedException) cause;
-            } else {
-                throw new UndeclaredThrowableException(cause);
-            }
+            throw handleDoAsException(pae);
+        }
+    }
+
+    @InterfaceAudience.Public
+    @InterfaceStability.Evolving
+    public <T> T doAs(SubjectPrivilegedExceptionAction<T> action
+    ) throws IOException, InterruptedException {
+        try {
+            logPrivilegedAction(subject, action);
+            return AsSubjectInvoker.doAs(subject, action);
+        } catch (PrivilegedActionException pae) {
+            throw handleDoAsException(pae);
+        }
+    }
+
+    private RuntimeException handleDoAsException(PrivilegedActionException pae)
+            throws IOException, InterruptedException
+    {
+        Throwable cause = pae.getCause();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("PrivilegedActionException as:" + this + " cause:" + cause);
+        }
+        if (cause instanceof IOException) {
+            throw (IOException) cause;
+        } else if (cause instanceof Error) {
+            throw (Error) cause;
+        } else if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+        } else if (cause instanceof InterruptedException) {
+            throw (InterruptedException) cause;
+        } else {
+            throw new UndeclaredThrowableException(cause);
         }
     }
 
