@@ -321,7 +321,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
             <version>${dep.slf4j.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -393,6 +393,26 @@
                 </executions>
                 <configuration>
                     <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+                    <!-- overriding class org.apache.hadoop.security.UserGroupInformation - so we need an exception here -->
+                    <exceptions>
+                        <exception>
+                            <conflictingDependencies>
+                                <dependency>
+                                    <groupId>com.facebook.presto.hadoop</groupId>
+                                    <artifactId>hadoop-apache2</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.apache.hadoop</groupId>
+                                    <artifactId>hadoop-common</artifactId>
+                                    <version>${dep.hadoop.version}</version>
+                                </dependency>
+                            </conflictingDependencies>
+                            <classes>
+                                <class>org.apache.hadoop.security.UserGroupInformation</class>
+                            </classes>
+                        </exception>
+                    </exceptions>
                 </configuration>
             </plugin>
 
@@ -547,6 +567,7 @@
                                     <artifact>org.apache.hadoop:hadoop-common</artifact>
                                     <excludes>
                                         <exclude>*.h</exclude>
+                                        <exclude>org/apache/hadoop/security/UserGroupInformation*.class</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
