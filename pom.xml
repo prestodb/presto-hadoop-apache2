@@ -124,10 +124,6 @@
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>commons-net</groupId>
-                    <artifactId>commons-net</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.codehaus.jackson</groupId>
                     <artifactId>jackson-core-asl</artifactId>
                 </exclusion>
