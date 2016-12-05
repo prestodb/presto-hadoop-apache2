@@ -83,8 +83,8 @@ public final class PrestoFileSystemCache
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
         if (!fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
-            fileSystemHolder.getFileSystem().close();
             map.remove(key);
+            fileSystemHolder.getFileSystem().close();
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
             map.put(key, fileSystemHolder);
