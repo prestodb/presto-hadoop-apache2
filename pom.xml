@@ -43,6 +43,7 @@
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
         <dep.slf4j.version>1.7.13</dep.slf4j.version>
         <dep.hadoop.version>2.7.3</dep.hadoop.version>
+        <dep.httpclient.version>4.5.2</dep.httpclient.version>
     </properties>
 
     <dependencies>
@@ -292,6 +293,23 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${dep.httpclient.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
