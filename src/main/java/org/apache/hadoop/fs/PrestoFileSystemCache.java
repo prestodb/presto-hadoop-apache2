@@ -21,12 +21,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.google.common.base.Objects.toStringHelper;
@@ -42,6 +38,8 @@ public final class PrestoFileSystemCache
 {
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
+    private final List<FileSystemHolder> toAutoClose = new LinkedList<>();
+    public static final String PRESTO_CACHE_TIMEOUT = "presto.cache.timeout";
 
     @Override
     FileSystem get(URI uri, Configuration conf)
@@ -83,8 +81,9 @@ public final class PrestoFileSystemCache
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
         if (!fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
+            closeExpiredFs(conf);
             map.remove(key);
-            fileSystemHolder.getFileSystem().close();
+            toAutoClose.add(fileSystemHolder);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
             map.put(key, fileSystemHolder);
@@ -182,6 +181,22 @@ public final class PrestoFileSystemCache
         }
     }
 
+    synchronized void closeExpiredFs(Configuration conf) throws IOException {
+        if (toAutoClose.size() < 1000) {
+            return;
+        }
+        Iterator<FileSystemHolder> it = toAutoClose.iterator();
+        while (it.hasNext()) {
+            FileSystemHolder fileSystemHolder = it.next();
+            if (System.currentTimeMillis() - fileSystemHolder.getTimestamp() > conf.getInt(PRESTO_CACHE_TIMEOUT, 60 * 60 * 1000)) {
+                it.remove();
+                fileSystemHolder.getFileSystem().close();
+            } else {
+                break; // order list
+            }
+        }
+    }
+
     private static class FileSystemKey
     {
         private final String scheme;
@@ -239,6 +254,7 @@ public final class PrestoFileSystemCache
     {
         private final FileSystem fileSystem;
         private final Set<?> privateCredentials;
+        private long timestamp = System.currentTimeMillis();
 
         public FileSystemHolder(FileSystem fileSystem, Set<?> privateCredentials)
         {
@@ -254,6 +270,14 @@ public final class PrestoFileSystemCache
         public Set<?> getPrivateCredentials()
         {
             return privateCredentials;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
         }
 
         @Override
