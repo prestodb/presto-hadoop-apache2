@@ -144,10 +144,6 @@
                     <artifactId>jetty</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-util</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>javax.servlet</groupId>
                     <artifactId>servlet-api</artifactId>
                 </exclusion>
@@ -292,6 +288,19 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-azure</artifactId>
+            <version>${dep.hadoop.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -456,6 +465,10 @@
                                     <shadedPattern>${shadeBase}.io.netty</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>com.microsoft.azure</pattern>
+                                    <shadedPattern>${shadeBase}.com.microsoft.azure</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.avro</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.avro</shadedPattern>
                                 </relocation>
@@ -476,8 +489,16 @@
                                     <shadedPattern>${shadeBase}.com.google.gson</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>com.fasterxml.jackson.core</pattern>
+                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson.core</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.codehaus.jackson</pattern>
                                     <shadedPattern>${shadeBase}.org.codehaus.jackson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.mortbay</pattern>
+                                    <shadedPattern>${shadeBase}.org.mortbay</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.log4j</pattern>
@@ -493,6 +514,9 @@
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -505,6 +529,12 @@
                                     <artifact>io.netty:netty-all</artifact>
                                     <excludes>
                                         <exclude>META-INF/io.netty.versions.properties</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.jackson.*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/**</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
