@@ -310,7 +310,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
             <version>${dep.slf4j.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
