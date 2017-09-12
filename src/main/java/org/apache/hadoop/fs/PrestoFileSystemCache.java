@@ -14,6 +14,8 @@
 package org.apache.hadoop.fs;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
@@ -40,6 +42,8 @@ import static org.apache.hadoop.security.UserGroupInformationShim.getSubject;
 public final class PrestoFileSystemCache
         extends FileSystem.Cache
 {
+    public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
+
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
 
@@ -84,7 +88,6 @@ public final class PrestoFileSystemCache
         // the same key.
         if (!fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
             map.remove(key);
-            fileSystemHolder.getFileSystem().close();
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
             map.put(key, fileSystemHolder);
@@ -100,9 +103,23 @@ public final class PrestoFileSystemCache
         if (clazz == null) {
             throw new IOException("No FileSystem for scheme: " + uri.getScheme());
         }
-        FileSystem fs = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
-        fs.initialize(uri, conf);
-        return fs;
+        final FileSystem original = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
+        original.initialize(uri, conf);
+        FilterFileSystem wrapper = new FilterFileSystem(original);
+        FinalizerService.getInstance().addFinalizer(wrapper, new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try {
+                    original.close();
+                }
+                catch (IOException e) {
+                    log.error("Error occurred when finalizing file system", e);
+                }
+            }
+        });
+        return wrapper;
     }
 
     @Override
