@@ -89,7 +89,7 @@ public final class PrestoFileSystemCache
         // a part of the FileSystemKey, but part of the FileSystemHolder. When a
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
-        if (!fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
+        if (isHdfs(uri) && !fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
             map.remove(key);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
@@ -200,6 +200,11 @@ public final class PrestoFileSystemCache
             default:
                 throw new IllegalArgumentException("Unsupported authentication method: " + authenticationMethod);
         }
+    }
+
+    private static boolean isHdfs(URI uri)
+    {
+        return "hdfs".equals(uri.getScheme());
     }
 
     private static class FileSystemKey
