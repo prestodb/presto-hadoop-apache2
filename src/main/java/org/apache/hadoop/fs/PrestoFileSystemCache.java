@@ -204,7 +204,8 @@ public final class PrestoFileSystemCache
 
     private static boolean isHdfs(URI uri)
     {
-        return "hdfs".equals(uri.getScheme());
+        String scheme = uri.getScheme();
+        return "hdfs".equals(scheme) || "viewfs".equals(scheme);
     }
 
     private static class FileSystemKey
