@@ -10,7 +10,7 @@
 
     <groupId>com.facebook.presto.hadoop</groupId>
     <artifactId>hadoop-apache2</artifactId>
-    <version>2.7.3-5-SNAPSHOT</version>
+    <version>2.7.4-1-SNAPSHOT</version>
 
     <name>hadoop-apache2</name>
     <description>Shaded version of Apache Hadoop 2.x for Presto</description>
@@ -42,7 +42,7 @@
         <project.build.targetJdk>1.7</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
         <dep.slf4j.version>1.7.13</dep.slf4j.version>
-        <dep.hadoop.version>2.7.3</dep.hadoop.version>
+        <dep.hadoop.version>2.7.4</dep.hadoop.version>
     </properties>
 
     <dependencies>
