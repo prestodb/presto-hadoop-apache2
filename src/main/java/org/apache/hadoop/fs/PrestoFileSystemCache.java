@@ -13,6 +13,7 @@
  */
 package org.apache.hadoop.fs;
 
+import com.facebook.presto.hadoop.FileSystemFactory;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +55,10 @@ public final class PrestoFileSystemCache
     FileSystem get(URI uri, Configuration conf)
             throws IOException
     {
+        if (conf instanceof FileSystemFactory) {
+            return ((FileSystemFactory) conf).createFileSystem(uri);
+        }
+
         return getInternal(uri, conf, 0);
     }
 
@@ -61,6 +66,10 @@ public final class PrestoFileSystemCache
     FileSystem getUnique(URI uri, Configuration conf)
             throws IOException
     {
+        if (conf instanceof FileSystemFactory) {
+            return ((FileSystemFactory) conf).createFileSystem(uri);
+        }
+
         return getInternal(uri, conf, unique.incrementAndGet());
     }
 
