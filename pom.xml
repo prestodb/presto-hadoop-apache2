@@ -542,6 +542,7 @@
                                     <artifact>org.apache.hadoop:hadoop-common</artifact>
                                     <excludes>
                                         <exclude>*.h</exclude>
+                                        <exclude>org/apache/hadoop/util/LineReader.class</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
