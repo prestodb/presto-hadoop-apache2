@@ -258,6 +258,10 @@ public class LineReader
             int appendLength = readLength - newlineLength;
             if (appendLength > maxLineLength - txtLength) {
                 appendLength = maxLineLength - txtLength;
+                if (appendLength > 0) {
+                    // We want to fail the read when the line length is over the limit.
+                    throw new IOException("Too many bytes before newline: " + maxLineLength);
+                }
             }
             if (appendLength > 0) {
                 int newTxtLength = txtLength + appendLength;
@@ -272,7 +276,10 @@ public class LineReader
         }
         while (newlineLength == 0 && bytesConsumed < maxBytesToConsume);
 
-        if (bytesConsumed > Integer.MAX_VALUE) {
+        if (newlineLength == 0 && bytesConsumed >= maxBytesToConsume) {
+            // It is possible that bytesConsumed is over the maxBytesToConsume but we
+            // didn't append anything to str.bytes. If we have consumed over maxBytesToConsume
+            // bytes but still haven't seen a line terminator, we will fail the read.
             throw new IOException("Too many bytes before newline: " + bytesConsumed);
         }
         return (int) bytesConsumed;
@@ -359,6 +366,10 @@ public class LineReader
             int appendLength = readLength - delPosn;
             if (appendLength > maxLineLength - txtLength) {
                 appendLength = maxLineLength - txtLength;
+                if (appendLength > 0) {
+                    // We want to fail the read when the line length is over the limit.
+                    throw new IOException("Too many bytes before delimiter: " + maxLineLength);
+                }
             }
             bytesConsumed += ambiguousByteCount;
             if (appendLength >= 0 && ambiguousByteCount > 0) {
@@ -389,7 +400,11 @@ public class LineReader
         }
         while (delPosn < recordDelimiterBytes.length
                 && bytesConsumed < maxBytesToConsume);
-        if (bytesConsumed > Integer.MAX_VALUE) {
+        if (delPosn < recordDelimiterBytes.length
+                && bytesConsumed >= maxBytesToConsume) {
+            // It is possible that bytesConsumed is over the maxBytesToConsume but we
+            // didn't append anything to str.bytes. If we have consumed over maxBytesToConsume
+            // bytes but still haven't seen a line terminator, we will fail the read.
             throw new IOException("Too many bytes before delimiter: " + bytesConsumed);
         }
         return (int) bytesConsumed;
