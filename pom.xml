@@ -596,7 +596,7 @@
                     <version>2.9</version>
                     <configuration>
                         <source>${project.build.targetJdk}</source>
-                        <additionalparam>-quiet</additionalparam>
+                        <additionalparam>-quiet -Xdoclint:missing</additionalparam>
                     </configuration>
                 </plugin>
             </plugins>
