@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.util;
 
+import com.facebook.presto.hadoop.TextLineLengthLimitExceededException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
@@ -260,7 +261,7 @@ public class LineReader
                 appendLength = maxLineLength - txtLength;
                 if (appendLength > 0) {
                     // We want to fail the read when the line length is over the limit.
-                    throw new IOException("Too many bytes before newline: " + maxLineLength);
+                    throw new TextLineLengthLimitExceededException("Too many bytes before newline: " + maxLineLength);
                 }
             }
             if (appendLength > 0) {
@@ -268,7 +269,7 @@ public class LineReader
                 if (str.getBytes().length < newTxtLength && Math.max(newTxtLength, txtLength << 1) > MAX_ARRAY_SIZE) {
                     // If str need to be resized but the target capacity is over VM limit, it will trigger OOM.
                     // In such case we will throw an IOException so the caller can deal with it.
-                    throw new IOException("Too many bytes before newline: " + newTxtLength);
+                    throw new TextLineLengthLimitExceededException("Too many bytes before newline: " + newTxtLength);
                 }
                 str.append(buffer, startPosn, appendLength);
                 txtLength = newTxtLength;
@@ -280,7 +281,7 @@ public class LineReader
             // It is possible that bytesConsumed is over the maxBytesToConsume but we
             // didn't append anything to str.bytes. If we have consumed over maxBytesToConsume
             // bytes but still haven't seen a line terminator, we will fail the read.
-            throw new IOException("Too many bytes before newline: " + bytesConsumed);
+            throw new TextLineLengthLimitExceededException("Too many bytes before newline: " + bytesConsumed);
         }
         return (int) bytesConsumed;
     }
@@ -368,7 +369,7 @@ public class LineReader
                 appendLength = maxLineLength - txtLength;
                 if (appendLength > 0) {
                     // We want to fail the read when the line length is over the limit.
-                    throw new IOException("Too many bytes before delimiter: " + maxLineLength);
+                    throw new TextLineLengthLimitExceededException("Too many bytes before delimiter: " + maxLineLength);
                 }
             }
             bytesConsumed += ambiguousByteCount;
@@ -386,7 +387,7 @@ public class LineReader
                 if (str.getBytes().length < newTxtLength && Math.max(newTxtLength, txtLength << 1) > MAX_ARRAY_SIZE) {
                     // If str need to be resized but the target capacity is over VM limit, it will trigger OOM.
                     // In such case we will throw an IOException so the caller can deal with it.
-                    throw new IOException("Too many bytes before delimiter: " + newTxtLength);
+                    throw new TextLineLengthLimitExceededException("Too many bytes before delimiter: " + newTxtLength);
                 }
                 str.append(buffer, startPosn, appendLength);
                 txtLength = newTxtLength;
@@ -405,7 +406,7 @@ public class LineReader
             // It is possible that bytesConsumed is over the maxBytesToConsume but we
             // didn't append anything to str.bytes. If we have consumed over maxBytesToConsume
             // bytes but still haven't seen a line terminator, we will fail the read.
-            throw new IOException("Too many bytes before delimiter: " + bytesConsumed);
+            throw new TextLineLengthLimitExceededException("Too many bytes before delimiter: " + bytesConsumed);
         }
         return (int) bytesConsumed;
     }

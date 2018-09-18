@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.facebook.presto.hadoop;
 
 import org.apache.hadoop.io.Text;
@@ -75,6 +88,7 @@ public class TestLineReader
 
     @Test
     public void testDefaultReaderMaxBytesConsumed()
+            throws IOException
     {
         byte[] input = "Hello world! Goodbye world!\n".getBytes(UTF_8);
         InputStream in = new ByteArrayInputStream(input);
@@ -84,9 +98,9 @@ public class TestLineReader
         try {
             // The read should fail because the line length is greater than the maxBytesToConsume
             reader.readLine(str, 0, 10);
-            fail("Expected IOException");
+            fail("Expected exception");
         }
-        catch (IOException e) {
+        catch (TextLineLengthLimitExceededException e) {
             // It should be 3 reads of 4 bytes each, so the final bytesConsumed is 12
             assertEquals(e.getMessage(), "Too many bytes before newline: 12");
         }
@@ -94,6 +108,7 @@ public class TestLineReader
 
     @Test
     public void testDefaultReaderMaxLineLength()
+            throws IOException
     {
         byte[] input = "Hello world! Goodbye world!\n".getBytes(UTF_8);
         InputStream in = new ByteArrayInputStream(input);
@@ -103,15 +118,16 @@ public class TestLineReader
         try {
             // The read should fail because the line length is greater than the maxLineLength
             reader.readLine(str, 10, 100);
-            fail("Expected IOException");
+            fail("Expected exception");
         }
-        catch (IOException e) {
+        catch (TextLineLengthLimitExceededException e) {
             assertEquals(e.getMessage(), "Too many bytes before newline: 10");
         }
     }
 
     @Test
     public void testCustomReaderMaxBytesConsumed()
+            throws IOException
     {
         byte[] input = "Hello world! Goodbye world!\n".getBytes(UTF_8);
         byte[] delimiter = "!".getBytes(UTF_8);
@@ -122,9 +138,9 @@ public class TestLineReader
         try {
             // The read should fail because the line length is greater than the maxBytesToConsume
             reader.readLine(str, 0, 5);
-            fail("Expected IOException");
+            fail("Expected exception");
         }
-        catch (IOException e) {
+        catch (TextLineLengthLimitExceededException e) {
             // It should be 2 reads of 4 bytes each, so the final bytesConsumed is 8
             assertEquals(e.getMessage(), "Too many bytes before delimiter: 8");
         }
@@ -132,6 +148,7 @@ public class TestLineReader
 
     @Test
     public void testCustomReaderMaxLineLength()
+            throws IOException
     {
         byte[] input = "Hello world! Goodbye world!\n".getBytes(UTF_8);
         byte[] delimiter = "!".getBytes(UTF_8);
@@ -142,9 +159,9 @@ public class TestLineReader
         try {
             // The read should fail because the line length is greater than the maxLineLength
             reader.readLine(str, 10, 100);
-            fail("Expected IOException");
+            fail("Expected exception");
         }
-        catch (IOException e) {
+        catch (TextLineLengthLimitExceededException e) {
             assertEquals(e.getMessage(), "Too many bytes before delimiter: 10");
         }
     }
