@@ -16,7 +16,6 @@ package com.facebook.presto.hadoop;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hadoop.io.compress.bzip2.Bzip2Factory;
 import org.apache.hadoop.io.compress.zlib.ZlibFactory;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.testng.annotations.Test;
@@ -27,8 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import static com.facebook.presto.hadoop.HadoopNative.getCodecs;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.hadoop.io.compress.CompressionCodecFactory.getCodecClasses;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -53,7 +52,7 @@ public class TestHadoopNative
 
         Configuration conf = new Configuration();
         CompressionCodecFactory factory = new CompressionCodecFactory(conf);
-        for (Class<? extends CompressionCodec> clazz : getCodecClasses(conf)) {
+        for (Class<? extends CompressionCodec> clazz : getCodecs(conf)) {
             CompressionCodec codec = factory.getCodecByClassName(clazz.getName());
             assertNotNull(codec, clazz.getName());
 
