@@ -43,7 +43,6 @@ public class TestHadoopNative
         assertTrue(NativeCodeLoader.isNativeCodeLoaded());
         assertTrue(NativeCodeLoader.buildSupportsSnappy());
         assertTrue(ZlibFactory.isNativeZlibLoaded(new Configuration()));
-        assertTrue(Bzip2Factory.isNativeBzip2Loaded(new Configuration()));
     }
 
     @Test
@@ -70,7 +69,6 @@ public class TestHadoopNative
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (OutputStream out = codec.createOutputStream(bytes)) {
             out.write(input);
-            out.close();
         }
         return bytes.toByteArray();
     }
