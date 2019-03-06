@@ -47,6 +47,7 @@ public final class PrestoFileSystemCache
         extends FileSystem.Cache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
+    public static final String CACHE_KEY = "fs.cache.credentials";
 
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
@@ -91,14 +92,17 @@ public final class PrestoFileSystemCache
             map.put(key, fileSystemHolder);
         }
 
-        // Private credentials are only set when using Kerberos authentication.
+        // Update file system instance when credentials change.
+        // - Private credentials are only set when using Kerberos authentication.
         // When the user is the same, but the private credentials are different,
         // that means that Kerberos ticket has expired and re-login happened.
         // To prevent cache leak in such situation, the privateCredentials are not
         // a part of the FileSystemKey, but part of the FileSystemHolder. When a
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
-        if (isHdfs(uri) && !fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
+        // - Extra credentials are used to authenticate with certain file systems.
+        if ((isHdfs(uri) && !fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) ||
+                extraCredentialsChanged(fileSystemHolder.getFileSystem(), conf)) {
             map.remove(key);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
@@ -215,6 +219,11 @@ public final class PrestoFileSystemCache
     {
         String scheme = uri.getScheme();
         return "hdfs".equals(scheme) || "viewfs".equals(scheme);
+    }
+
+    private static boolean extraCredentialsChanged(FileSystem fileSystem, Configuration configuration)
+    {
+        return !configuration.get(CACHE_KEY, "").equals(fileSystem.getConf().get(CACHE_KEY, ""));
     }
 
     private static class FileSystemKey
