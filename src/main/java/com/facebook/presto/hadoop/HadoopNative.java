@@ -25,6 +25,8 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.hadoop.io.compress.CompressionCodecFactory.getCodecClasses;
 
@@ -59,11 +61,23 @@ public final class HadoopNative
         }
     }
 
+    public static List<Class<? extends CompressionCodec>> getCodecs(Configuration conf)
+    {
+        // Skip zstd for now, we rely on it being pre-installed rather than included in presto-hadoop-apache2
+        List<Class<? extends CompressionCodec>> codecs = new ArrayList<>();
+        for (Class<? extends CompressionCodec> clazz : getCodecClasses(conf)) {
+            if (clazz.getName() != "org.apache.hadoop.io.compress.ZStandardCodec") {
+                codecs.add(clazz);
+            }
+        }
+        return codecs;
+    }
+
     private static void loadAllCodecs()
     {
         Configuration conf = new Configuration();
         CompressionCodecFactory factory = new CompressionCodecFactory(conf);
-        for (Class<? extends CompressionCodec> clazz : getCodecClasses(conf)) {
+        for (Class<? extends CompressionCodec> clazz : getCodecs(conf)) {
             CompressionCodec codec = factory.getCodecByClassName(clazz.getName());
             if (codec == null) {
                 throw new RuntimeException("failed to load codec: " + clazz.getName());
