@@ -1148,18 +1148,6 @@ public class KMSClientProvider extends KeyProvider implements CryptoExtension,
         return token;
     }
 
-    private boolean containsKmsDt(UserGroupInformation ugi) throws IOException {
-        // Add existing credentials from the UGI, since provider is cached.
-        Credentials creds = ugi.getCredentials();
-        if (!creds.getAllTokens().isEmpty()) {
-            LOG.debug("Searching for KMS delegation token in user {}'s credentials",
-                    ugi);
-            return clientTokenProvider.selectDelegationToken(creds) != null;
-        }
-
-        return false;
-    }
-
     @VisibleForTesting
     UserGroupInformation getActualUgi() throws IOException {
         final UserGroupInformation currentUgi = UserGroupInformation
@@ -1172,15 +1160,6 @@ public class KMSClientProvider extends KeyProvider implements CryptoExtension,
         if (currentUgi.getRealUser() != null) {
             // Use real user for proxy user
             actualUgi = currentUgi.getRealUser();
-        }
-        if (UserGroupInformation.isSecurityEnabled() &&
-                !containsKmsDt(actualUgi) && !actualUgi.shouldRelogin()) {
-            // Use login user is only necessary when Kerberos is enabled
-            // but the actual user does not have either
-            // Kerberos credential or KMS delegation token for KMS operations
-            LOG.debug("Using loginUser when Kerberos is enabled but the actual user" +
-                    " does not have either KMS Delegation Token or Kerberos Credentials");
-            actualUgi = UserGroupInformation.getLoginUser();
         }
         return actualUgi;
     }
