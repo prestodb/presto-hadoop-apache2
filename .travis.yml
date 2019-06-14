@@ -3,9 +3,9 @@ language: java
 matrix:
   include:
   - os: linux
-    jdk: oraclejdk8
+    jdk: openjdk8
   - os: linux
-    jdk: oraclejdk9
+    jdk: openjdk9
   - os: linux
     dist: xenial
     jdk: openjdk10
