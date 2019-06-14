@@ -342,7 +342,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${dep.slf4j.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -625,6 +624,8 @@
                                     <excludes>
                                         <exclude>*.h</exclude>
                                         <exclude>org/apache/hadoop/util/LineReader.class</exclude>
+                                        <exclude>org/apache/hadoop/crypto/key/kms/KMSClientProvider.class</exclude>
+                                        <exclude>org/apache/hadoop/crypto/key/kms/KMSClientProvider$*.class</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
