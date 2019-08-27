@@ -1,11 +1,7 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -263,12 +259,12 @@ public class KMSClientProvider extends KeyProvider implements CryptoExtension,
 
         /**
          * This provider expects URIs in the following form :
-         * kms://<PROTO>@<AUTHORITY>/<PATH>
+         * kms://&lt;PROTO&gt;@&lt;AUTHORITY&gt;/&lt;PATH&gt;
          *
          * where :
          * - PROTO = http or https
-         * - AUTHORITY = <HOSTS>[:<PORT>]
-         * - HOSTS = <HOSTNAME>[;<HOSTS>]
+         * - AUTHORITY = &lt;HOSTS&gt;[:&lt;PORT&gt;]
+         * - HOSTS = &lt;HOSTNAME&gt;[;&lt;HOSTS&gt;]
          * - HOSTNAME = string
          * - PORT = integer
          *
