@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <groupId>io.airlift</groupId>
+        <artifactId>airbase</artifactId>
+        <version>88</version>
     </parent>
 
     <groupId>com.facebook.presto.hadoop</groupId>
@@ -14,7 +14,7 @@
 
     <name>hadoop-apache2</name>
     <description>Shaded version of Apache Hadoop for Presto</description>
-    <url>https://github.com/facebook/presto-hadoop-apache2</url>
+    <url>https://github.com/prestodb/presto-hadoop-apache2</url>
 
     <inceptionYear>2013</inceptionYear>
 
@@ -31,21 +31,48 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/facebook/presto-hadoop-apache2.git</connection>
-        <developerConnection>scm:git:git://github.com/facebook/presto-hadoop-apache2.git</developerConnection>
-        <url>https://github.com/facebook/presto-hadoop-apache2</url>
-        <tag>HEAD</tag>
+        <connection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</connection>
+        <developerConnection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</developerConnection>
+        <url>https://github.com/prestodb/presto-hadoop-apache2</url>
+        <tag>3.2.0-1</tag>
     </scm>
 
     <properties>
+        <air.check.skip-modernizer>true</air.check.skip-modernizer>
+        <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
+        <air.check.skip-dependency>true</air.check.skip-dependency>
+        <air.check.skip-checkstyle>true</air.check.skip-checkstyle>
+        <air.check.skip-spotbugs>true</air.check.skip-spotbugs>
+        <air.check.skip-pmd>true</air.check.skip-pmd>
+        <air.check.skip-jacoco>true</air.check.skip-jacoco>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.8</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
         <dep.slf4j.version>1.7.25</dep.slf4j.version>
         <dep.hadoop.version>3.2.0</dep.hadoop.version>
+
+        <dep.nexus-staging-plugin.version>1.6.8</dep.nexus-staging-plugin.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>11.0.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
@@ -435,15 +462,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-                <configuration>
-                    <useAgent>true</useAgent>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.1</version>
                 <executions>
@@ -669,7 +687,54 @@
                         <tagNameFormat>@{project.version}</tagNameFormat>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${dep.nexus-staging-plugin.version}</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <serverId>ossrh</serverId>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>oss-release</id>
+            <properties>
+                <!-- tests run in the preparation step of the release -->
+                <skipTests>true</skipTests>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- oss requires a javadoc jar. Build one when releasing. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <!-- Sign artifacts using gpg for oss upload -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>deploy-to-ossrh</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
