@@ -10,7 +10,7 @@
 
     <groupId>com.facebook.presto.hadoop</groupId>
     <artifactId>hadoop-apache2</artifactId>
-    <version>3.2.0-1</version>
+    <version>3.2.0-2-SNAPSHOT</version>
 
     <name>hadoop-apache2</name>
     <description>Shaded version of Apache Hadoop for Presto</description>
