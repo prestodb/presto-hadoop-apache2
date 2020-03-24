@@ -18,15 +18,12 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
-import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,7 +40,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.hadoop.fs.FileSystem.getFileSystemClass;
 import static org.apache.hadoop.security.UserGroupInformationShim.getSubject;
 
-public final class PrestoFileSystemCache
+public class PrestoFileSystemCache
         extends FileSystem.Cache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
@@ -108,7 +105,7 @@ public final class PrestoFileSystemCache
         return fileSystemHolder.getFileSystem();
     }
 
-    private static FileSystem createFileSystem(URI uri, Configuration conf)
+    private FileSystem createFileSystem(URI uri, Configuration conf)
             throws IOException
     {
         Class<?> clazz = getFileSystemClass(uri.getScheme(), conf);
@@ -117,7 +114,7 @@ public final class PrestoFileSystemCache
         }
         final FileSystem original = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
         original.initialize(uri, conf);
-        FilterFileSystem wrapper = new FileSystemWrapper(original);
+        FileSystem wrapper = createPrestoFileSystemWrapper(original);
         FinalizerService.getInstance().addFinalizer(wrapper, new Runnable()
         {
             @Override
@@ -132,6 +129,11 @@ public final class PrestoFileSystemCache
             }
         });
         return wrapper;
+    }
+
+    protected FileSystem createPrestoFileSystemWrapper(FileSystem original)
+    {
+        return new PrestoFilterFileSystemWrapper(original);
     }
 
     @Override
@@ -298,75 +300,6 @@ public final class PrestoFileSystemCache
                     .add("fileSystem", fileSystem)
                     .add("privateCredentials", privateCredentials)
                     .toString();
-        }
-    }
-
-    private static class FileSystemWrapper
-            extends FilterFileSystem
-    {
-        public FileSystemWrapper(FileSystem fs)
-        {
-            super(fs);
-        }
-
-        @Override
-        public FSDataInputStream open(Path f, int bufferSize)
-                throws IOException
-        {
-            return new InputStreamWrapper(getRawFileSystem().open(f, bufferSize), this);
-        }
-
-        @Override
-        public FSDataOutputStream append(Path f, int bufferSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().append(f, bufferSize, progress), this);
-        }
-
-        @Override
-        public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().create(f, permission, overwrite, bufferSize, replication, blockSize, progress), this);
-        }
-
-        @Override
-        public FSDataOutputStream create(Path f, FsPermission permission, EnumSet<CreateFlag> flags, int bufferSize, short replication, long blockSize, Progressable progress, Options.ChecksumOpt checksumOpt)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().create(f, permission, flags, bufferSize, replication, blockSize, progress, checksumOpt), this);
-        }
-
-        @Override
-        public FSDataOutputStream createNonRecursive(Path f, FsPermission permission, EnumSet<CreateFlag> flags, int bufferSize, short replication, long blockSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().createNonRecursive(f, permission, flags, bufferSize, replication, blockSize, progress), this);
-        }
-    }
-
-    private static class OutputStreamWrapper
-            extends FSDataOutputStream
-    {
-        private final FileSystem fileSystem;
-
-        public OutputStreamWrapper(FSDataOutputStream delegate, FileSystem fileSystem)
-                throws IOException
-        {
-            super(delegate, null, delegate.getPos());
-            this.fileSystem = fileSystem;
-        }
-    }
-
-    private static class InputStreamWrapper
-            extends FSDataInputStream
-    {
-        private final FileSystem fileSystem;
-
-        public InputStreamWrapper(FSDataInputStream inputStream, FileSystem fileSystem)
-        {
-            super(inputStream);
-            this.fileSystem = fileSystem;
         }
     }
 }
