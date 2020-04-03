@@ -1,21 +1,16 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.util;
 
 import com.facebook.presto.hadoop.TextLineLengthLimitExceededException;
@@ -39,7 +34,7 @@ import java.io.InputStream;
  * In both cases, EOF also terminates an otherwise unterminated
  * line.
  */
-@InterfaceAudience.LimitedPrivate({"MapReduce"})
+@InterfaceAudience.LimitedPrivate("MapReduce")
 @InterfaceStability.Unstable
 public class LineReader
         implements Closeable
@@ -57,13 +52,14 @@ public class LineReader
     private InputStream in;
     private byte[] buffer;
     // the number of bytes of real data in the buffer
-    private int bufferLength = 0;
+    private int bufferLength;
     // the current position in the buffer
-    private int bufferPosn = 0;
+    private int bufferPosn;
 
     /**
      * Create a line reader that reads from the given stream using the
      * default buffer-size (64k).
+     *
      * @param in The input stream
      * @throws IOException
      */
@@ -75,6 +71,7 @@ public class LineReader
     /**
      * Create a line reader that reads from the given stream using the
      * given buffer-size.
+     *
      * @param in The input stream
      * @param bufferSize Size of the read buffer
      * @throws IOException
@@ -91,6 +88,7 @@ public class LineReader
      * Create a line reader that reads from the given stream using the
      * <code>io.file.buffer.size</code> specified in the given
      * <code>Configuration</code>.
+     *
      * @param in input stream
      * @param conf configuration
      * @throws IOException
@@ -105,6 +103,7 @@ public class LineReader
      * Create a line reader that reads from the given stream using the
      * default buffer-size, and using a custom delimiter of array of
      * bytes.
+     *
      * @param in The input stream
      * @param recordDelimiterBytes The delimiter
      */
@@ -120,6 +119,7 @@ public class LineReader
      * Create a line reader that reads from the given stream using the
      * given buffer-size, and using a custom delimiter of array of
      * bytes.
+     *
      * @param in The input stream
      * @param bufferSize Size of the read buffer
      * @param recordDelimiterBytes The delimiter
@@ -139,6 +139,7 @@ public class LineReader
      * <code>io.file.buffer.size</code> specified in the given
      * <code>Configuration</code>, and using a custom delimiter of array of
      * bytes.
+     *
      * @param in input stream
      * @param conf configuration
      * @param recordDelimiterBytes The delimiter
@@ -156,6 +157,7 @@ public class LineReader
 
     /**
      * Close the underlying stream.
+     *
      * @throws IOException
      */
     public void close()
@@ -169,15 +171,13 @@ public class LineReader
      *
      * @param str the object to store the given line (without newline)
      * @param maxLineLength the maximum number of bytes to store into str;
-     *  the rest of the line is silently discarded.
+     * the rest of the line is silently discarded.
      * @param maxBytesToConsume the maximum number of bytes to consume
-     *  in this call.  This is only a hint, because if the line cross
-     *  this threshold, we allow it to happen.  It can overshoot
-     *  potentially by as much as one buffer length.
-     *
+     * in this call.  This is only a hint, because if the line cross
+     * this threshold, we allow it to happen.  It can overshoot
+     * potentially by as much as one buffer length.
      * @return the number of bytes read including the (longest) newline
      * found.
-     *
      * @throws IOException if the underlying stream throws
      */
     public int readLine(Text str, int maxLineLength,
@@ -230,7 +230,8 @@ public class LineReader
         do {
             int startPosn = bufferPosn; //starting from where we left off the last time
             if (bufferPosn >= bufferLength) {
-                startPosn = bufferPosn = 0;
+                startPosn = 0;
+                bufferPosn = 0;
                 if (prevCharCR) {
                     ++bytesConsumed; //account for CR from previous read
                 }
@@ -325,7 +326,7 @@ public class LineReader
          *         ambiguous characters in str.
          *
          *     2.2 If the following bytes are not the remaining characters of
-         *         the delimiter ( as mentioned in the example ),
+         *         the delimiter ( as mentioned in the example),
          *         then we have to include the ambiguous characters in str.
          */
         str.clear();
@@ -336,7 +337,8 @@ public class LineReader
         do {
             int startPosn = bufferPosn; // Start from previous end position
             if (bufferPosn >= bufferLength) {
-                startPosn = bufferPosn = 0;
+                startPosn = 0;
+                bufferPosn = 0;
                 bufferLength = fillBuffer(in, buffer, ambiguousByteCount > 0);
                 if (bufferLength <= 0) {
                     if (ambiguousByteCount > 0) {
@@ -413,6 +415,7 @@ public class LineReader
 
     /**
      * Read from the InputStream into the given Text.
+     *
      * @param str the object to store the given line
      * @param maxLineLength the maximum number of bytes to store into str.
      * @return the number of bytes read including the newline
@@ -426,6 +429,7 @@ public class LineReader
 
     /**
      * Read from the InputStream into the given Text.
+     *
      * @param str the object to store the given line
      * @return the number of bytes read including the newline
      * @throws IOException if the underlying stream throws

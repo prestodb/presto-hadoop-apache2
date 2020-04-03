@@ -31,7 +31,7 @@ public class FinalizerService
 
     private static final long REMOVE_TIMEOUT = 5000;
 
-    private static FinalizerService INSTANCE;
+    private static FinalizerService instance;
 
     private final Set<FinalizerReference> finalizers = Sets.newSetFromMap(new ConcurrentHashMap<FinalizerReference, Boolean>());
     private final ReferenceQueue<Object> finalizerQueue = new ReferenceQueue<>();
@@ -41,12 +41,12 @@ public class FinalizerService
 
     public static synchronized FinalizerService getInstance()
     {
-        if (INSTANCE == null) {
+        if (instance == null) {
             FinalizerService finalizer = new FinalizerService();
             finalizer.start();
-            INSTANCE = finalizer;
+            instance = finalizer;
         }
-        return INSTANCE;
+        return instance;
     }
 
     private void start()
