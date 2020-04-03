@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <groupId>com.facebook.airlift</groupId>
+        <artifactId>airbase</artifactId>
+        <version>98</version>
     </parent>
 
     <groupId>com.facebook.presto.hadoop</groupId>
@@ -43,6 +43,13 @@
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
         <dep.slf4j.version>1.7.13</dep.slf4j.version>
         <dep.hadoop.version>2.7.4</dep.hadoop.version>
+
+        <air.check.skip-dependency>true</air.check.skip-dependency>
+        <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
+        <air.check.skip-modernizer>true</air.check.skip-modernizer>
+        <air.check.skip-enforcer>true</air.check.skip-enforcer>
+        <air.check.skip-spotbugs>true</air.check.skip-spotbugs>
+        <air.check.skip-pmd>true</air.check.skip-pmd>
     </properties>
 
     <dependencies>
