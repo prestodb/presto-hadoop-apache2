@@ -44,6 +44,7 @@ public class PrestoFileSystemCache
         extends FileSystem.Cache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
+    public static final String PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY = "presto.gcs.oauth-access-token";
 
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
@@ -95,7 +96,7 @@ public class PrestoFileSystemCache
         // a part of the FileSystemKey, but part of the FileSystemHolder. When a
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
-        if (isHdfs(uri) && !fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) {
+        if (fileSystemRefresh(uri, conf, privateCredentials, fileSystemHolder)) {
             map.remove(key);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
@@ -103,6 +104,22 @@ public class PrestoFileSystemCache
         }
 
         return fileSystemHolder.getFileSystem();
+    }
+
+    private boolean fileSystemRefresh(URI uri, Configuration conf, Set<?> privateCredentials, FileSystemHolder fileSystemHolder)
+    {
+        if (isHdfs(uri)) {
+            return !fileSystemHolder.getPrivateCredentials().equals(privateCredentials);
+        }
+        if ("gs".equals(uri.getScheme())) {
+            String existingGcsToken = fileSystemHolder.getFileSystem().getConf().get(PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY);
+            String newGcsToken = conf.get(PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY);
+            if (existingGcsToken == null) {
+                return newGcsToken != null;
+            }
+            return !existingGcsToken.equals(newGcsToken);
+        }
+        return false;
     }
 
     private FileSystem createFileSystem(URI uri, Configuration conf)
