@@ -45,6 +45,8 @@ public class PrestoFileSystemCache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
     public static final String PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY = "presto.gcs.oauth-access-token";
+    public static final String PRESTO_S3_IAM_ROLE = "presto.s3.iam-role";
+    public static final String PRESTO_S3_ACCESS_KEY = "presto.s3.access-key";
 
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
@@ -118,6 +120,20 @@ public class PrestoFileSystemCache
                 return newGcsToken != null;
             }
             return !existingGcsToken.equals(newGcsToken);
+        }
+        if (uri.getScheme().startsWith("s3")) {
+            String existingIAMRole = fileSystemHolder.getFileSystem().getConf().get(PRESTO_S3_IAM_ROLE);
+            String existingAccessKey = fileSystemHolder.getFileSystem().getConf().get(PRESTO_S3_ACCESS_KEY);
+            String newIAMRole = conf.get(PRESTO_S3_IAM_ROLE);
+            String newAccessKey = conf.get(PRESTO_S3_ACCESS_KEY);
+
+            if (existingAccessKey == null && existingIAMRole == null) {
+                return newIAMRole != null || newAccessKey != null;
+            }
+            if (existingIAMRole != null) {
+                return !existingIAMRole.equals(newIAMRole);
+            }
+            return !existingAccessKey.equals(newAccessKey);
         }
         return false;
     }
