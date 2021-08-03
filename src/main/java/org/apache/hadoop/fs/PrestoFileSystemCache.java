@@ -45,7 +45,7 @@ public class PrestoFileSystemCache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
     public static final String PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY = "presto.gcs.oauth-access-token";
-    public static final String PRESTO_S3_IAM_ROLE = "presto.s3.iam-role";
+    public static final String PRESTO_S3_IAM_ROLE = "presto.hive.s3.iam-role";
     public static final String PRESTO_S3_ACCESS_KEY = "presto.s3.access-key";
 
     private final AtomicLong unique = new AtomicLong();
