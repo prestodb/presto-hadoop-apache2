@@ -29,3 +29,9 @@ outlined on that page and do not file a public issue.
 ## License
 By contributing to presto-hadoop-apache2, you agree that your contributions will be licensed
 under the LICENSE file in the root directory of this source tree.
+
+## Maintainers
+In addition to PrestoDB committers, this project is also maintained by the individuals below,
+who have committer rights to this repository:
+
+* [Ariel Weisberg](https://github.com/aweisberg)
