@@ -99,7 +99,8 @@ public class PrestoFileSystemCache
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
         if (fileSystemRefresh(uri, conf, privateCredentials, fileSystemHolder)) {
-            map.remove(key);
+            FileSystemHolder expiredFSHolder = map.remove(key);
+            FileSystemCleaner.getInstance().addExpiredFileSystem(expiredFSHolder);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
             map.put(key, fileSystemHolder);
@@ -111,7 +112,9 @@ public class PrestoFileSystemCache
     private boolean fileSystemRefresh(URI uri, Configuration conf, Set<?> privateCredentials, FileSystemHolder fileSystemHolder)
     {
         if (isHdfs(uri)) {
-            return !fileSystemHolder.getPrivateCredentials().equals(privateCredentials);
+            // privateCredentials size() will be more than fileSystemHolder.getPrivateCredentials(),
+            // but privateCredentials contains fileSystemHolder.getPrivateCredentials()
+            return !privateCredentials.containsAll(fileSystemHolder.getPrivateCredentials());
         }
         if ("gs".equals(uri.getScheme())) {
             String existingGcsToken = fileSystemHolder.getFileSystem().getConf().get(PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY);
@@ -147,21 +150,7 @@ public class PrestoFileSystemCache
         }
         final FileSystem original = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
         original.initialize(uri, conf);
-        FileSystem wrapper = createPrestoFileSystemWrapper(original);
-        FinalizerService.getInstance().addFinalizer(wrapper, new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try {
-                    original.close();
-                }
-                catch (IOException e) {
-                    log.error("Error occurred when finalizing file system", e);
-                }
-            }
-        });
-        return wrapper;
+        return createPrestoFileSystemWrapper(original);
     }
 
     protected FileSystem createPrestoFileSystemWrapper(FileSystem original)
@@ -305,10 +294,11 @@ public class PrestoFileSystemCache
         }
     }
 
-    private static class FileSystemHolder
+    protected static class FileSystemHolder
     {
         private final FileSystem fileSystem;
         private final Set<?> privateCredentials;
+        private long expireTimestamp; // timestamp of remove from cache
 
         public FileSystemHolder(FileSystem fileSystem, Set<?> privateCredentials)
         {
@@ -332,7 +322,18 @@ public class PrestoFileSystemCache
             return toStringHelper(this)
                     .add("fileSystem", fileSystem)
                     .add("privateCredentials", privateCredentials)
+                    .add("expireTimestamp", expireTimestamp)
                     .toString();
+        }
+
+        public void setExpireTimestamp(long expireTimestamp)
+        {
+            this.expireTimestamp = expireTimestamp;
+        }
+
+        public long getExpireTimestamp()
+        {
+            return expireTimestamp;
         }
     }
 }
