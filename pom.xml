@@ -42,7 +42,7 @@
         <project.build.targetJdk>1.7</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
         <dep.slf4j.version>1.7.13</dep.slf4j.version>
-        <dep.hadoop.version>2.7.4</dep.hadoop.version>
+        <dep.hadoop.version>2.10.1</dep.hadoop.version>
 
         <air.check.skip-dependency>true</air.check.skip-dependency>
         <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
