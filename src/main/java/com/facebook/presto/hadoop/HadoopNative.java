@@ -30,8 +30,8 @@ import static org.apache.hadoop.io.compress.CompressionCodecFactory.getCodecClas
 
 public final class HadoopNative
 {
-    private static boolean loaded = false;
-    private static Throwable error = null;
+    private static boolean loaded;
+    private static Throwable error;
 
     private HadoopNative() {}
 

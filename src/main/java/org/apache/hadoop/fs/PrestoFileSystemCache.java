@@ -18,15 +18,12 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
-import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,11 +40,13 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.hadoop.fs.FileSystem.getFileSystemClass;
 import static org.apache.hadoop.security.UserGroupInformationShim.getSubject;
 
-public final class PrestoFileSystemCache
+public class PrestoFileSystemCache
         extends FileSystem.Cache
 {
     public static final Log log = LogFactory.getLog(PrestoFileSystemCache.class);
-    public static final String CACHE_KEY = "fs.cache.credentials";
+    public static final String PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY = "presto.gcs.oauth-access-token";
+    public static final String PRESTO_S3_IAM_ROLE = "presto.hive.s3.iam-role";
+    public static final String PRESTO_S3_ACCESS_KEY = "presto.s3.access-key";
 
     private final AtomicLong unique = new AtomicLong();
     private final Map<FileSystemKey, FileSystemHolder> map = new HashMap<>();
@@ -92,17 +91,14 @@ public final class PrestoFileSystemCache
             map.put(key, fileSystemHolder);
         }
 
-        // Update file system instance when credentials change.
-        // - Private credentials are only set when using Kerberos authentication.
+        // Private credentials are only set when using Kerberos authentication.
         // When the user is the same, but the private credentials are different,
         // that means that Kerberos ticket has expired and re-login happened.
         // To prevent cache leak in such situation, the privateCredentials are not
         // a part of the FileSystemKey, but part of the FileSystemHolder. When a
         // Kerberos re-login occurs, re-create the file system and cache it using
         // the same key.
-        // - Extra credentials are used to authenticate with certain file systems.
-        if ((isHdfs(uri) && !fileSystemHolder.getPrivateCredentials().equals(privateCredentials)) ||
-                extraCredentialsChanged(fileSystemHolder.getFileSystem(), conf)) {
+        if (fileSystemRefresh(uri, conf, privateCredentials, fileSystemHolder)) {
             map.remove(key);
             FileSystem fileSystem = createFileSystem(uri, conf);
             fileSystemHolder = new FileSystemHolder(fileSystem, privateCredentials);
@@ -112,7 +108,37 @@ public final class PrestoFileSystemCache
         return fileSystemHolder.getFileSystem();
     }
 
-    private static FileSystem createFileSystem(URI uri, Configuration conf)
+    private boolean fileSystemRefresh(URI uri, Configuration conf, Set<?> privateCredentials, FileSystemHolder fileSystemHolder)
+    {
+        if (isHdfs(uri)) {
+            return !fileSystemHolder.getPrivateCredentials().equals(privateCredentials);
+        }
+        if ("gs".equals(uri.getScheme())) {
+            String existingGcsToken = fileSystemHolder.getFileSystem().getConf().get(PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY);
+            String newGcsToken = conf.get(PRESTO_GCS_OAUTH_ACCESS_TOKEN_KEY);
+            if (existingGcsToken == null) {
+                return newGcsToken != null;
+            }
+            return !existingGcsToken.equals(newGcsToken);
+        }
+        if (uri.getScheme().startsWith("s3")) {
+            String existingIAMRole = fileSystemHolder.getFileSystem().getConf().get(PRESTO_S3_IAM_ROLE);
+            String existingAccessKey = fileSystemHolder.getFileSystem().getConf().get(PRESTO_S3_ACCESS_KEY);
+            String newIAMRole = conf.get(PRESTO_S3_IAM_ROLE);
+            String newAccessKey = conf.get(PRESTO_S3_ACCESS_KEY);
+
+            if (existingAccessKey == null && existingIAMRole == null) {
+                return newIAMRole != null || newAccessKey != null;
+            }
+            if (existingIAMRole != null) {
+                return !existingIAMRole.equals(newIAMRole);
+            }
+            return !existingAccessKey.equals(newAccessKey);
+        }
+        return false;
+    }
+
+    private FileSystem createFileSystem(URI uri, Configuration conf)
             throws IOException
     {
         Class<?> clazz = getFileSystemClass(uri.getScheme(), conf);
@@ -121,7 +147,7 @@ public final class PrestoFileSystemCache
         }
         final FileSystem original = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
         original.initialize(uri, conf);
-        FilterFileSystem wrapper = new FileSystemWrapper(original);
+        FileSystem wrapper = createPrestoFileSystemWrapper(original);
         FinalizerService.getInstance().addFinalizer(wrapper, new Runnable()
         {
             @Override
@@ -136,6 +162,11 @@ public final class PrestoFileSystemCache
             }
         });
         return wrapper;
+    }
+
+    protected FileSystem createPrestoFileSystemWrapper(FileSystem original)
+    {
+        return new PrestoFilterFileSystemWrapper(original);
     }
 
     @Override
@@ -221,11 +252,6 @@ public final class PrestoFileSystemCache
         return "hdfs".equals(scheme) || "viewfs".equals(scheme);
     }
 
-    private static boolean extraCredentialsChanged(FileSystem fileSystem, Configuration configuration)
-    {
-        return !configuration.get(CACHE_KEY, "").equals(fileSystem.getConf().get(CACHE_KEY, ""));
-    }
-
     private static class FileSystemKey
     {
         private final String scheme;
@@ -307,75 +333,6 @@ public final class PrestoFileSystemCache
                     .add("fileSystem", fileSystem)
                     .add("privateCredentials", privateCredentials)
                     .toString();
-        }
-    }
-
-    private static class FileSystemWrapper
-            extends FilterFileSystem
-    {
-        public FileSystemWrapper(FileSystem fs)
-        {
-            super(fs);
-        }
-
-        @Override
-        public FSDataInputStream open(Path f, int bufferSize)
-                throws IOException
-        {
-            return new InputStreamWrapper(getRawFileSystem().open(f, bufferSize), this);
-        }
-
-        @Override
-        public FSDataOutputStream append(Path f, int bufferSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().append(f, bufferSize, progress), this);
-        }
-
-        @Override
-        public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().create(f, permission, overwrite, bufferSize, replication, blockSize, progress), this);
-        }
-
-        @Override
-        public FSDataOutputStream create(Path f, FsPermission permission, EnumSet<CreateFlag> flags, int bufferSize, short replication, long blockSize, Progressable progress, Options.ChecksumOpt checksumOpt)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().create(f, permission, flags, bufferSize, replication, blockSize, progress, checksumOpt), this);
-        }
-
-        @Override
-        public FSDataOutputStream createNonRecursive(Path f, FsPermission permission, EnumSet<CreateFlag> flags, int bufferSize, short replication, long blockSize, Progressable progress)
-                throws IOException
-        {
-            return new OutputStreamWrapper(getRawFileSystem().createNonRecursive(f, permission, flags, bufferSize, replication, blockSize, progress), this);
-        }
-    }
-
-    private static class OutputStreamWrapper
-            extends FSDataOutputStream
-    {
-        private final FileSystem fileSystem;
-
-        public OutputStreamWrapper(FSDataOutputStream delegate, FileSystem fileSystem)
-                throws IOException
-        {
-            super(delegate, null, delegate.getPos());
-            this.fileSystem = fileSystem;
-        }
-    }
-
-    private static class InputStreamWrapper
-            extends FSDataInputStream
-    {
-        private final FileSystem fileSystem;
-
-        public InputStreamWrapper(FSDataInputStream inputStream, FileSystem fileSystem)
-        {
-            super(inputStream);
-            this.fileSystem = fileSystem;
         }
     }
 }

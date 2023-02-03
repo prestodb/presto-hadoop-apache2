@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.airlift</groupId>
+        <groupId>com.facebook.airlift</groupId>
         <artifactId>airbase</artifactId>
-        <version>88</version>
+        <version>98</version>
     </parent>
 
     <groupId>com.facebook.presto.hadoop</groupId>
@@ -56,12 +56,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>11.0.2</version>
@@ -81,6 +75,22 @@
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-mapreduce-client-app</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.j2objc</groupId>
+                    <artifactId>j2objc-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>checker-qual</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>animal-sniffer-annotations</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
@@ -335,6 +345,7 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-azure</artifactId>
             <version>${dep.hadoop.version}</version>
+            <scope>runtime</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -351,7 +362,7 @@
             </exclusions>
         </dependency>
 
-        <!-- discard all logging from Hadoop -->
+        <!-- send logging to java.util.logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
@@ -373,7 +384,7 @@
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
+            <artifactId>slf4j-jdk14</artifactId>
             <version>${dep.slf4j.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -430,9 +441,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M3</version>
-                <configuration>
-                    <trimStackTrace>false</trimStackTrace>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -447,17 +455,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <source>${project.build.targetJdk}</source>
-                    <quiet>true</quiet>
-                    <doclint>-missing</doclint>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -563,6 +560,10 @@
                                     <pattern>org.slf4j</pattern>
                                     <shadedPattern>${shadeBase}.org.slf4j</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.google.thirdparty.publicsuffix</pattern>
+                                    <shadedPattern>${shadeBase}.com.google.thirdparty.publicsuffix</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
@@ -642,8 +643,6 @@
                                     <excludes>
                                         <exclude>*.h</exclude>
                                         <exclude>org/apache/hadoop/util/LineReader.class</exclude>
-                                        <exclude>org/apache/hadoop/crypto/key/kms/KMSClientProvider.class</exclude>
-                                        <exclude>org/apache/hadoop/crypto/key/kms/KMSClientProvider$*.class</exclude>
                                     </excludes>
                                 </filter>
                                 <filter>
@@ -663,43 +662,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <preparationGoals>clean verify -DskipTests</preparationGoals>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${dep.nexus-staging-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                </configuration>
+            </plugin>
         </plugins>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.0.0-M1</version>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
-                    <configuration>
-                        <mavenExecutorId>forked-path</mavenExecutorId>
-                        <pushChanges>false</pushChanges>
-                        <localCheckout>true</localCheckout>
-                        <useReleaseProfile>false</useReleaseProfile>
-                        <preparationGoals>clean install</preparationGoals>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <tagNameFormat>@{project.version}</tagNameFormat>
-                    </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${dep.nexus-staging-plugin.version}</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <serverId>ossrh</serverId>
-                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 
     <profiles>

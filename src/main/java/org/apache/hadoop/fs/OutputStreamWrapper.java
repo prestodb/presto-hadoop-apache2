@@ -11,25 +11,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.openssl;
-
-import org.apache.hadoop.fs.azurebfs.utils.SSLSocketFactoryEx;
-import org.apache.hadoop.fs.azurebfs.utils.SSLSocketFactoryEx.SSLChannelMode;
+package org.apache.hadoop.fs;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
-public final class OpenSSLProvider
+public class OutputStreamWrapper
+        extends FSDataOutputStream
 {
-    private OpenSSLProvider() {}
+    private final FileSystem fileSystem;
 
-    public static void register()
+    public OutputStreamWrapper(FSDataOutputStream delegate, FileSystem fileSystem)
+            throws IOException
     {
-        try {
-            SSLSocketFactoryEx.initializeDefaultFactory(SSLChannelMode.Default_JSSE);
-        }
-        catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        super(delegate, null, delegate.getPos());
+        this.fileSystem = fileSystem;
     }
 }
