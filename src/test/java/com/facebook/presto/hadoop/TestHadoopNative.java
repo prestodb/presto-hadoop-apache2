@@ -42,6 +42,7 @@ public class TestHadoopNative
 
         assertTrue(NativeCodeLoader.isNativeCodeLoaded());
         assertTrue(NativeCodeLoader.buildSupportsSnappy());
+        assertTrue(NativeCodeLoader.buildSupportsZstd());
         assertTrue(ZlibFactory.isNativeZlibLoaded(new Configuration()));
         assertTrue(Bzip2Factory.isNativeBzip2Loaded(new Configuration()));
     }
