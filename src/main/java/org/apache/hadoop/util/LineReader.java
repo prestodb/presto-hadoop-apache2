@@ -17,11 +17,16 @@ import com.facebook.presto.hadoop.TextLineLengthLimitExceededException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.statistics.IOStatistics;
+import org.apache.hadoop.fs.statistics.IOStatisticsSource;
+import org.apache.hadoop.fs.statistics.IOStatisticsSupport;
 import org.apache.hadoop.io.Text;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
 
 /**
  * A class that provides a line reader from an input stream.
@@ -37,7 +42,7 @@ import java.io.InputStream;
 @InterfaceAudience.LimitedPrivate("MapReduce")
 @InterfaceStability.Unstable
 public class LineReader
-        implements Closeable
+        implements Closeable , IOStatisticsSource
 {
     // Limitation for array size is VM specific. Current HotSpot VM limitation
     // for array size is Integer.MAX_VALUE - 5 (2^31 - 1 - 5).
@@ -96,7 +101,7 @@ public class LineReader
     public LineReader(InputStream in, Configuration conf)
             throws IOException
     {
-        this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
+        this(in, conf.getInt(IO_FILE_BUFFER_SIZE_KEY, DEFAULT_BUFFER_SIZE));
     }
 
     /**
@@ -143,14 +148,14 @@ public class LineReader
      * @param in input stream
      * @param conf configuration
      * @param recordDelimiterBytes The delimiter
-     * @throws IOException
+     * @throws IOException raised on errors performing I/O.
      */
     public LineReader(InputStream in, Configuration conf,
             byte[] recordDelimiterBytes)
             throws IOException
     {
         this.in = in;
-        this.bufferSize = conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
+        this.bufferSize = conf.getInt(IO_FILE_BUFFER_SIZE_KEY, DEFAULT_BUFFER_SIZE);
         this.buffer = new byte[this.bufferSize];
         this.recordDelimiterBytes = recordDelimiterBytes;
     }
@@ -158,7 +163,7 @@ public class LineReader
     /**
      * Close the underlying stream.
      *
-     * @throws IOException
+     * @throws IOException raised on errors performing I/O.
      */
     public void close()
             throws IOException
@@ -166,6 +171,14 @@ public class LineReader
         in.close();
     }
 
+    /**
+     * Return any IOStatistics provided by the source.
+     * @return IO stats from the input stream.
+     */
+    @Override
+    public IOStatistics getIOStatistics() {
+        return IOStatisticsSupport.retrieveIOStatistics(in);
+    }
     /**
      * Read one line from the InputStream into the given Text.
      *

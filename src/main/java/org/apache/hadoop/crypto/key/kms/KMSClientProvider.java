@@ -14,6 +14,7 @@
 package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
@@ -75,9 +76,9 @@ import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.CryptoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.hadoop.classification.VisibleForTesting;
+import org.apache.hadoop.util.Preconditions;
+import org.apache.hadoop.thirdparty.com.google.common.base.Strings;
 
 import static org.apache.hadoop.util.KMSUtil.checkNotEmpty;
 import static org.apache.hadoop.util.KMSUtil.checkNotNull;
@@ -558,16 +559,17 @@ public class KMSClientProvider extends KeyProvider implements CryptoExtension,
             throw ex;
         }
         if ((conn.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN
+                && (!StringUtils.isEmpty(conn.getResponseMessage())
                 && (conn.getResponseMessage().equals(ANONYMOUS_REQUESTS_DISALLOWED) ||
-                conn.getResponseMessage().contains(INVALID_SIGNATURE)))
+                conn.getResponseMessage().contains(INVALID_SIGNATURE))))
                 || conn.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
             // Ideally, this should happen only when there is an Authentication
             // failure. Unfortunately, the AuthenticationFilter returns 403 when it
             // cannot authenticate (Since a 401 requires Server to send
             // WWW-Authenticate header as well)..
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Response={}({}), resetting authToken",
-                        conn.getResponseCode(), conn.getResponseMessage());
+                LOG.debug("Response={}, resetting authToken",
+                        conn.getResponseCode());
             }
             KMSClientProvider.this.authToken =
                     new DelegationTokenAuthenticatedURL.Token();

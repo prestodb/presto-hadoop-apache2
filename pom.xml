@@ -10,7 +10,7 @@
 
     <groupId>com.facebook.presto.hadoop</groupId>
     <artifactId>hadoop-apache2</artifactId>
-    <version>3.2.0-1-SNAPSHOT</version>
+    <version>3.4.1-1-SNAPSHOT</version>
 
     <name>hadoop-apache2</name>
     <description>Shaded version of Apache Hadoop for Presto</description>
@@ -34,21 +34,17 @@
         <connection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</connection>
         <developerConnection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</developerConnection>
         <url>https://github.com/prestodb/presto-hadoop-apache2</url>
-        <tag>3.2.0-1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.targetJdk>1.8</project.build.targetJdk>
         <shadeBase>com.facebook.presto.hadoop.\$internal</shadeBase>
-        <dep.slf4j.version>1.7.25</dep.slf4j.version>
-        <dep.hadoop.version>3.2.0</dep.hadoop.version>
+        <dep.slf4j.version>2.0.16</dep.slf4j.version>
+        <dep.hadoop.version>3.4.1</dep.hadoop.version>
 
         <dep.nexus-staging-plugin.version>1.6.8</dep.nexus-staging-plugin.version>
-
-        <air.check.skip-dependency>true</air.check.skip-dependency>
-        <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
-        <air.check.skip-modernizer>true</air.check.skip-modernizer>
         <air.check.skip-enforcer>true</air.check.skip-enforcer>
         <air.check.skip-modernizer>true</air.check.skip-modernizer>
         <air.check.skip-duplicate-finder>true</air.check.skip-duplicate-finder>
@@ -70,6 +66,18 @@
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
                     <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.j2objc</groupId>
+                    <artifactId>j2objc-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>checker-qual</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -133,10 +141,6 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
                     <artifactId>commons-math</artifactId>
                 </exclusion>
                 <exclusion>
@@ -178,6 +182,10 @@
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
                     <artifactId>jersey-servlet</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.pjfanning</groupId>
+                    <artifactId>jersey-json</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -242,6 +250,30 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-reload4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.reload4j</groupId>
+                    <artifactId>reload4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk18on</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.dropwizard.metrics</groupId>
+                    <artifactId>metrics-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jakarta.activation</groupId>
+                    <artifactId>jakarta.activation-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -369,6 +401,12 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+
         <!-- send logging to java.util.logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -401,6 +439,20 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>6.2.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
+            <version>1.8.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.10.6</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -456,6 +508,10 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                             <relocations>
+                                <relocation>
+                                    <pattern>jakarta.annotation</pattern>
+                                    <shadedPattern>${shadeBase}.jakarta.annotation</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>org.iq80.leveldb</pattern>
                                     <shadedPattern>${shadeBase}.org.iq80.leveldb</shadedPattern>
@@ -531,6 +587,10 @@
                                 <relocation>
                                     <pattern>org.codehaus.stax2</pattern>
                                     <shadedPattern>${shadeBase}.org.codehaus.stax2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.jettison</pattern>
+                                    <shadedPattern>${shadeBase}.org.codehaus.jettison</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.log4j</pattern>
