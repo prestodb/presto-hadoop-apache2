@@ -73,6 +73,11 @@ public class PrestoFileSystemCache
         return getInternal(uri, conf, unique.incrementAndGet());
     }
 
+    public PrestoFileSystemCache()
+    {
+        super(new Configuration(false));
+    }
+
     private synchronized FileSystem getInternal(URI uri, Configuration conf, long unique)
             throws IOException
     {
