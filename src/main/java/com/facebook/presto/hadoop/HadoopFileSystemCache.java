@@ -16,9 +16,6 @@ package com.facebook.presto.hadoop;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.PrestoFileSystemCache;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 public final class HadoopFileSystemCache
 {
     private static PrestoFileSystemCache cache;
@@ -28,26 +25,9 @@ public final class HadoopFileSystemCache
     public static synchronized void initialize()
     {
         if (cache == null) {
-            cache = setFinalStatic(FileSystem.class, "CACHE", new PrestoFileSystemCache());
-        }
-    }
-
-    private static <T> T setFinalStatic(Class<?> clazz, String name, T value)
-    {
-        try {
-            Field field = clazz.getDeclaredField(name);
-            field.setAccessible(true);
-
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-            field.set(null, value);
-
-            return value;
-        }
-        catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
+            PrestoFileSystemCache newCache = new PrestoFileSystemCache();
+            FileSystem.setCache(newCache);
+            cache = newCache;
         }
     }
 }
