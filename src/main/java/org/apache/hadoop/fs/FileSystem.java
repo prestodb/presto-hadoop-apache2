@@ -211,7 +211,11 @@ public abstract class FileSystem
      * FileSystem cache.
      */
 
-    static final Cache CACHE = new Cache(new Configuration());
+    static Cache CACHE = new Cache(new Configuration());
+
+    public static void setCache(Cache newCache) {
+        CACHE = newCache;
+    }
 
     /**
      * The key this instance is stored under in the cache.
