@@ -260,10 +260,6 @@
                     <artifactId>reload4j</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk18on</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>io.dropwizard.metrics</groupId>
                     <artifactId>metrics-core</artifactId>
                 </exclusion>
@@ -489,7 +485,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -600,6 +596,10 @@
                                 <relocation>
                                     <pattern>com.google.thirdparty.publicsuffix</pattern>
                                     <shadedPattern>${shadeBase}.com.google.thirdparty.publicsuffix</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.bouncycastle</pattern>
+                                    <shadedPattern>${shadeBase}.org.bouncycastle</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
