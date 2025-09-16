@@ -9,12 +9,12 @@
     </parent>
 
     <groupId>com.facebook.presto.hadoop</groupId>
-    <artifactId>hadoop-apache2</artifactId>
+    <artifactId>hadoop-apache</artifactId>
     <version>3.4.1-1-SNAPSHOT</version>
 
-    <name>hadoop-apache2</name>
+    <name>hadoop-apache</name>
     <description>Shaded version of Apache Hadoop for Presto</description>
-    <url>https://github.com/prestodb/presto-hadoop-apache2</url>
+    <url>https://github.com/prestodb/presto-hadoop-apache</url>
 
     <inceptionYear>2013</inceptionYear>
 
@@ -31,9 +31,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</connection>
-        <developerConnection>scm:git:git://github.com/prestodb/presto-hadoop-apache2.git</developerConnection>
-        <url>https://github.com/prestodb/presto-hadoop-apache2</url>
+        <connection>scm:git:git://github.com/prestodb/presto-hadoop-apache.git</connection>
+        <developerConnection>scm:git:git://github.com/prestodb/presto-hadoop-apache.git</developerConnection>
+        <url>https://github.com/prestodb/presto-hadoop-apache</url>
         <tag>HEAD</tag>
     </scm>
 
