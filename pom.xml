@@ -10,7 +10,7 @@
 
     <groupId>com.facebook.presto.hadoop</groupId>
     <artifactId>hadoop-apache</artifactId>
-    <version>3.4.1-1-SNAPSHOT</version>
+    <version>3.4.1-1</version>
 
     <name>hadoop-apache</name>
     <description>Shaded version of Apache Hadoop for Presto</description>
@@ -34,7 +34,7 @@
         <connection>scm:git:git://github.com/prestodb/presto-hadoop-apache.git</connection>
         <developerConnection>scm:git:git://github.com/prestodb/presto-hadoop-apache.git</developerConnection>
         <url>https://github.com/prestodb/presto-hadoop-apache</url>
-        <tag>HEAD</tag>
+        <tag>3.4.1-1</tag>
     </scm>
 
     <properties>
